@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-ao">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento de Consultas Médicas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; width: 100%; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-900">
+
+    <header class="bg-emerald-800 text-white shadow-xl no-print">
+        <div class="container mx-auto p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="bg-white p-3 rounded-2xl text-emerald-800 shadow-inner">
+                    <i class="fas fa-hospital-user text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">Hospital Central</h1>
+                    <p class="text-emerald-200 text-xs uppercase tracking-widest font-semibold">Tecnologia em Agendamento</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <form action="/buscar" method="POST" class="flex bg-emerald-900/50 p-1 rounded-xl">
+                    <input type="time" name="horario_busca" class="bg-transparent border-none text-white p-2 outline-none">
+                    <button class="bg-emerald-500 hover:bg-emerald-400 px-4 py-2 rounded-lg font-bold transition">Buscar</button>
+                </form>
+                <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 px-5 py-2 rounded-xl font-bold transition flex items-center gap-2 border border-slate-500">
+                    <i class="fas fa-print"></i> Relatório
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto flex-grow p-6">
+
+        <div class="print-only text-center mb-10 border-b-4 border-slate-900 pb-4">
+            <h1 class="text-4xl font-black uppercase">Relatório de Agendamentos</h1>
+            <p class="text-xl italic">Sistema de Gestão de Dados AVL - Hospital Central</p>
+            <p class="mt-2" id="data-print"></p>
+        </div>
+
+        {% if busca %}
+        <div class="mb-6 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-800 font-bold rounded-xl shadow-sm flex justify-between items-center no-print">
+            <span>{{ busca }}</span>
+            <a href="/" class="text-xs bg-emerald-200 px-3 py-1 rounded-full uppercase">Limpar</a>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 no-print">
+                <h2 class="text-xl font-black mb-6 text-slate-800 uppercase tracking-tighter">Novo Registro</h2>
+                <form action="/agendar" method="POST" class="space-y-5">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase ml-1">Horário</label>
+                        <input type="time" name="horario" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase ml-1">Paciente</label>
+                        <input type="text" name="paciente" placeholder="Nome Completo" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase ml-1">Telefone</label>
+                        <input type="text" name="telefone" placeholder="(00) 00000-0000" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                    </div>
+                    <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-100">Confirmar Agendamento</button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                <h2 class="text-xl font-black mb-6 text-slate-800 uppercase tracking-tighter italic no-print">Lista de Espera Ordenada</h2>
+                <table class="w-full text-left">
+                    <thead class="border-b-2 border-slate-100">
+                        <tr class="text-slate-400 text-xs uppercase tracking-widest font-black">
+                            <th class="pb-4">Horário</th>
+                            <th class="pb-4">Paciente</th>
+                            <th class="pb-4">Contato</th>
+                            <th class="pb-4 text-right no-print">Gestão</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for c in consultas %}
+                        <tr class="hover:bg-emerald-50/50 transition group">
+                            <td class="py-5 font-black text-emerald-600 font-mono text-lg">{{ c.horario }}</td>
+                            <td class="py-5 font-bold text-slate-700">{{ c.paciente }}</td>
+                            <td class="py-5 text-slate-400 text-sm">{{ c.telefone }}</td>
+                            <td class="py-5 text-right no-print">
+                                <a href="/cancelar/{{ c.raw }}" class="inline-flex items-center gap-2 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white px-4 py-2 rounded-xl transition font-bold text-xs">
+                                    <i class="fas fa-user-minus"></i> CANCELAR
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-sm">
+                                <i class="fas fa-calendar-day block text-4xl mb-2 opacity-20"></i> Sem consultas para hoje
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-500 p-10 mt-12 no-print">
+        <div class="container mx-auto text-center border-t border-slate-800 pt-8">
+            <p class="font-black text-white uppercase tracking-[0.3em] text-xs mb-3">Algoritmo Avançado: Árvores AVL </p>
+            <p class="text-[10px] opacity-40 leading-relaxed max-w-md mx-auto">Todos os Direitos Reservados</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('data-print').innerText = "Data: " + new Date().toLocaleDateString('pt-ao');
+    </script>
+</body>
+</html>
