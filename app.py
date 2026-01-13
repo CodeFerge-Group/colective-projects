@@ -154,7 +154,7 @@ def buscar():
     if not h_input: return redirect(url_for('index'))
     h = int(h_input.replace(":", ""))
     res = agenda.buscar(raiz_global, h)
-    msg = f"🔍 Encontrado: {res.paciente} ({agenda.formatar_hora(h)})" if res else "❌ Horário livre."
+    msg = f" Encontrado: {res.paciente} ({agenda.formatar_hora(h)})" if res else " Horário livre."
     return redirect(url_for('index', busca=msg))
 
 
