@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Evento - AUREDIASE</title>
+    <style>
+        /* Configurações de Impressão */
+        @page { size: A4; margin: 1.5cm; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Cabeçalho Estilizado */
+        .header {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-bottom: 4px solid #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: 2px;
+            color: #2c3e50;
+            text-transform: uppercase;
+        }
+
+        .header p { margin: 5px 0; font-size: 14px; color: #7f8c8d; }
+
+        /* Blocos de Informação */
+        .info-container { margin-bottom: 25px; }
+
+        .section-title {
+            background: #2c3e50;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+
+        /* Tabelas Modernas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+        }
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+            font-size: 11px;
+        }
+
+        th {
+            background-color: #f1f3f5;
+            color: #495057;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) { background-color: #fdfdfd; }
+
+        /* Badges de Status */
+        .status {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-confirmado { background: #d4edda; color: #155724; }
+        .status-pendente { background: #fff3cd; color: #856404; }
+
+        /* Rodapé e Totais */
+        .summary-box {
+            float: right;
+            width: 250px;
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .summary-box span { font-size: 18px; font-weight: bold; display: block; }
+
+        .footer {
+            clear: both;
+            margin-top: 50px;
+            text-align: center;
+            font-size: 10px;
+            color: #95a5a6;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1> AUREDIASI Relatório de Gestão de Evento</h1>
+        <p><strong>Evento:</strong> {{ evento.nome }} | <strong>Moderador:</strong> {{ evento.moderador }}</p>
+        <p>Local: {{ evento.localevento }} | Periodo: {{ evento.datainicio.strftime('%d/%m/%Y') }} a {{ evento.datafim.strftime('%d/%m/%Y') }}</p>
+    </div>
+
+    <div class="info-container">
+        <div class="section-title">Cronograma de Atividades</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Sessão / Descrição</th>
+                    <th>Data e Hora</th>
+                    <th>Local/Sala</th>
+                    <th>Oradores Responsáveis</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sessao in sessoes %}
+                <tr>
+                    <td><strong>{{ sessao.descricao }}</strong></td>
+                    <td>{{ sessao.datahora.strftime('%d/%m/%Y %H:%M') if sessao.datahora else '---' }}</td>
+                    <td>{{ sessao.sala }}</td>
+                    <td>
+                        {% for orador in sessao.oradores %}
+                            {{ orador.nome }}{% if not loop.last %}, {% endif %}
+                        {% else %}
+                            <span style="color: #999;">Nenhum orador</span>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="info-container">
+        <div class="section-title">Lista Nominal de Participantes</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome Completo</th>
+                    <th>E-mail de Contacto</th>
+                    <th>Telefone</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Valor (Kz)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inscricao in inscricoes %}
+                <tr>
+                    <td>{{ inscricao.participante_rel.nome }}</td>
+                    <td>{{ inscricao.participante_rel.email }}</td>
+                    <td>{{ inscricao.participante_rel.telefone }}</td>
+                    <td>{{ inscricao.tipo_inscricao }}</td>
+                    <td>
+                        <span class="status {% if inscricao.status_pagamento == 'Confirmado' %}status-confirmado{% else %}status-pendente{% endif %}">
+                            {{ inscricao.status_pagamento }}
+                        </span>
+                    </td>
+                    <td style="text-align: right;">{{ "{:,.2f}".format(inscricao.valor_pago) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="summary-box">
+        RECEITA TOTAL
+        <span>{{ "{:,.2f}".format(total_pago) }} Kz</span>
+    </div>
+
+    <div class="footer">
+        Este documento é para uso interno da #AUREDIASE.<br>
+        Gerado automaticamente em {{ data_atual }}
+    </div>
+
+</body>
+</html>
